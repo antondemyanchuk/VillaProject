@@ -5,6 +5,7 @@ using Newtonsoft.Json;
 using System.Collections.Generic;
 using VillaProject_WEB.Models;
 using VillaProject_WEB.Models.DTO;
+using VillaProject_WEB.Models.VM;
 using VillaProject_WEB.Services;
 using VillaProject_WEB.Services.IServices;
 
@@ -38,16 +39,29 @@ namespace VillaProject_WEB.Controllers
 		}
 		public async Task<IActionResult> CreateVillaNumber()
 		{
-			ViewBag.Villas = new SelectList(items: await GetVillasSelectList(), dataValueField: "Id", dataTextField: "Name");
-			return View();
+			VillaNumberCreateVM villaNumberVM = new();
+
+			var response = await _villaService.GetAllAsync<APIResponse>();
+
+			if (response != null && response.IsSuccess)
+			{
+				villaNumberVM.VillaList = JsonConvert.DeserializeObject<List<VillaDTO>>(Convert.ToString(response.Result))
+					.Select(i=> new SelectListItem
+					{
+						Text = i.Name,
+						Value = i.Id.ToString()
+					});
+			}
+
+			return View(villaNumberVM);
 		}
 		[HttpPost]
 		[ValidateAntiForgeryToken]
-		public async Task<IActionResult> CreateVillaNumber(VillaNumberCreateDTO model)
+		public async Task<IActionResult> CreateVillaNumber(VillaNumberCreateVM model)
 		{
 			if (ModelState.IsValid)
 			{
-				var response = await _numberService.CreateAsync<APIResponse>(model);
+				var response = await _numberService.CreateAsync<APIResponse>(model.VillaNumber);
 
 				if (response != null && response.IsSuccess)
 				{
@@ -55,18 +69,6 @@ namespace VillaProject_WEB.Controllers
 				}
 			}
 			return View(model);
-		}
-		private async Task<IEnumerable<object>> GetVillasSelectList()
-		{
-			List<VillaDTO> list = new();
-			var response = await _villaService.GetAllAsync<APIResponse>();
-
-			if (response != null && response.IsSuccess)
-			{
-				list = JsonConvert.DeserializeObject<List<VillaDTO>>(Convert.ToString(response.Result));
-			}
-			var result = list.Select(s => new { s.Id, s.Name }).ToList();
-			return result;
 		}
 	}
 }

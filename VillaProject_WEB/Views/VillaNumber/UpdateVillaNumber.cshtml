@@ -1,17 +1,17 @@
-﻿@model VillaProject_WEB.Models.VM.VillaNumberCreateVM
+﻿@model VillaProject_WEB.Models.VM.VillaNumberUpdateVM
 
-<form asp-action="CreateVillaNumber">
+<form asp-action="UpdateVillaNumber">
     <br />
     <div class="container border">
-        <h1 class="text-primary">Create Villa Number</h1>
+        <h1 class="text-primary">Update Villa Number</h1>
         <hr />
         <div class="row pb-3">
-            <div asp-validation-summary="All" class="text-danger"></div>
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="col-2">
                 <label asp-for="VillaNumber.VillaNo" class="control-label pt-2" style="font-size:20px;"></label>
             </div>
             <div class="col-10 pb-3">
-                <input asp-for="VillaNumber.VillaNo" class="form-control" />
+                <input asp-for="VillaNumber.VillaNo" readonly class="form-control" />
                 <span asp-validation-for="VillaNumber.VillaNo" class="text-danger"></span>
             </div>
 
@@ -19,9 +19,7 @@
                 <label asp-for="VillaNumber.VillaId" class="control-label pt-2" style="font-size:20px;"></label>
             </div>
             <div class="col-10 pb-3">
-                <select asp-for="VillaNumber.VillaId" asp-items="Model.VillaList" class="form-control">
-                    <option disabled selected>--Select Villa--</option>
-                </select>
+                <select asp-for="VillaNumber.VillaId" asp-items="Model.VillaList" class="form-control"></select>
                 <span asp-validation-for="VillaNumber.VillaId" class="text-danger"></span>
             </div>
 
@@ -36,7 +34,7 @@
                 <a asp-action="IndexVillaNumber" asp-controller="VillaNumber" class="btn-primary btn form-control">Back to List</a>
             </div>
             <div class="col-5" pb-3>
-                <input type="submit" value="Create" class="btn btn-success form-control" />
+                <input type="submit" value="Update" class="btn btn-success form-control" />
             </div>
 
         </div>

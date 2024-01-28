@@ -55,7 +55,7 @@ namespace VillaProject_WEB.Services
 			{
 				var dto = new APIResponse
 				{
-					ErrorsMessages = [Convert.ToString(ex.Message)],
+					ErrorMessages = [Convert.ToString(ex.Message)],
 					IsSuccess = false
 				};
 				var res = JsonConvert.SerializeObject(dto);

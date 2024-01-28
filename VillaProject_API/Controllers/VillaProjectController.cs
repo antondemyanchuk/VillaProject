@@ -39,7 +39,7 @@ namespace VillaProject_API.Controllers
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
-                _response.ErrorsMessages = new List<string>() { ex.ToString() };
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
             }
             return _response;
         }
@@ -77,7 +77,7 @@ namespace VillaProject_API.Controllers
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
-                _response.ErrorsMessages = new List<string>() { ex.ToString() };
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
                 _logger.LogError("Exception Getting Villa by Id");
             }
             return _response;
@@ -99,7 +99,7 @@ namespace VillaProject_API.Controllers
                 //Checking and validation data
                 if (await _dbVilla.GetAsync(v => v.Name.ToLower() == createVillaDTO.Name.ToLower()) != null)
                 {
-                    ModelState.AddModelError("VillaExistError", "Villa already exist!");
+                    ModelState.AddModelError("ErrorMessages", "Villa already exist!");
                     _response.IsSuccess = false;
                     _logger.LogInformation("Villa already exists with the specified number");
                     return BadRequest(ModelState);
@@ -136,7 +136,7 @@ namespace VillaProject_API.Controllers
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
-                _response.ErrorsMessages = new List<string>() { ex.ToString() };
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
             }
             return _response;
         }
@@ -174,7 +174,7 @@ namespace VillaProject_API.Controllers
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
-                _response.ErrorsMessages = new List<string>() { ex.ToString() };
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
             }
             return _response;
         }
@@ -212,7 +212,7 @@ namespace VillaProject_API.Controllers
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
-                _response.ErrorsMessages = new List<string>() { ex.ToString() };
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
             }
             return _response;
         }
@@ -271,7 +271,7 @@ namespace VillaProject_API.Controllers
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
-                _response.ErrorsMessages = new List<string>() { ex.ToString() };
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
             }
             return _response;
         }

@@ -3,7 +3,7 @@ using VillaProject_API.Models;
 
 namespace VillaProject_WEB.Models.DTO
 {
-    public class VillaNumberUpdateDTO
+    public class VillaNumberDeleteDTO
     {
         [Required]
         public int VillaNo { get; set; }

@@ -21,7 +21,7 @@ namespace VillaProject_API.Controllers
         {
             _mapper = mapper;
             _logger = logger;
-            _villaRepository = villaRepository; 
+            _villaRepository = villaRepository;
             _numberRepository = numberRepository;
             this._response = new();
         }
@@ -32,7 +32,7 @@ namespace VillaProject_API.Controllers
         {
             try
             {
-                IEnumerable<VillaNumber> villaNumbers = await _numberRepository.GetAllAsync(includeProperties:"Villa");
+                IEnumerable<VillaNumber> villaNumbers = await _numberRepository.GetAllAsync(includeProperties: "Villa");
                 _response.Result = _mapper.Map<IEnumerable<VillaNumberDTO>>(villaNumbers);
                 _response.StatusCode = HttpStatusCode.OK;
                 _logger.LogInformation("Getting All Numbers");
@@ -41,13 +41,13 @@ namespace VillaProject_API.Controllers
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
-                _response.ErrorsMessages = new List<string>() { ex.ToString() };
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
                 _logger.LogError("Exception Getting All Numbers");
             }
             return _response;
         }
 
-        [HttpGet("{villaNo:int}",Name = "GetNumber")]
+        [HttpGet("{villaNo:int}", Name = "GetNumber")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -62,7 +62,7 @@ namespace VillaProject_API.Controllers
                     _response.IsSuccess = false;
                     return BadRequest(_response);
                 }
-                var villaNumber = await _numberRepository.GetAsync(n => n.VillaNo == villaNo);
+                var villaNumber = await _numberRepository.GetAsync(n => n.VillaNo == villaNo, includeProperties: "Villa");
 
                 if (villaNumber == null)
                 {
@@ -79,7 +79,7 @@ namespace VillaProject_API.Controllers
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
-                _response.ErrorsMessages = [ex.ToString()];
+                _response.ErrorMessages = [ex.ToString()];
                 _logger.LogError("Exception Getting Number by No");
             }
             return _response;
@@ -95,17 +95,18 @@ namespace VillaProject_API.Controllers
             {
                 if (await _numberRepository.GetAsync(v => v.VillaNo == createVillaNumberDTO.VillaNo) != null)
                 {
-                    ModelState.AddModelError("NumberExistError", "Number already exist!");
+                    ModelState.AddModelError("ErrorMessages", "Number already exist!");
                     _response.IsSuccess = false;
+                    _response.ErrorMessages = ["Number already exist!"];
                     _logger.LogInformation("Number already exists with the specified number");
                     return BadRequest(_response);
                 }
                 if (await _villaRepository.GetAsync(v => v.Id == createVillaNumberDTO.VillaId) == null)
                 {
-                    //ModelState.AddModelError("VillaExistError", "Villa with provided Id doesn't exist!");
+                    ModelState.AddModelError("ErrorMessages", "Villa with provided Id doesn't exist!");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.ErrorsMessages = ["Villa with provided Id doesn't exist!"];
+                    _response.ErrorMessages = ["Villa with provided Id doesn't exist!"];
                     _logger.LogInformation("Villa with provided Id doesn't exist!");
                     return BadRequest(_response);
                 }
@@ -129,7 +130,7 @@ namespace VillaProject_API.Controllers
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
-                _response.ErrorsMessages = new List<string>() { ex.ToString() };
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
                 _logger.LogError("Exception Creating new Number");
             }
             return _response;
@@ -168,7 +169,7 @@ namespace VillaProject_API.Controllers
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
-                _response.ErrorsMessages = new List<string>() { ex.ToString() };
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
             }
             return _response;
         }
@@ -189,7 +190,7 @@ namespace VillaProject_API.Controllers
                 }
                 if (await _villaRepository.GetAsync(v => v.Id == updateVillaNumberDTO.VillaId) == null)
                 {
-                    ModelState.AddModelError("VillaExistError", "Villa with provided Id doesn't exist!");
+                    ModelState.AddModelError("ErrorMessages", "Villa with provided Id doesn't exist!");
                     _response.IsSuccess = false;
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _logger.LogInformation("Villa with provided Id doesn't exist!");
@@ -207,7 +208,7 @@ namespace VillaProject_API.Controllers
             catch (Exception ex)
             {
                 _response.IsSuccess = false;
-                _response.ErrorsMessages = new List<string>() { ex.ToString() };
+                _response.ErrorMessages = new List<string>() { ex.ToString() };
             }
             return _response;
         }

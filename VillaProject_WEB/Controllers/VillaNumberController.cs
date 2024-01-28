@@ -53,6 +53,7 @@ namespace VillaProject_WEB.Controllers
 
                 if (response != null && response.IsSuccess)
                 {
+                    TempData["success"] = "Number created successfully";
                     return RedirectToAction(nameof(IndexVillaNumber));
                 }
                 else
@@ -63,6 +64,7 @@ namespace VillaProject_WEB.Controllers
                     }
                 }
             }
+            TempData["error"] = "Error encountered";
             model.VillaList = await GetVillaNumberVM();
             return View(model);
         }
@@ -94,9 +96,11 @@ namespace VillaProject_WEB.Controllers
 
                 if (response != null && response.IsSuccess)
                 {
+                    TempData["success"] = "Number updated successfully";
                     return RedirectToAction(nameof(IndexVillaNumber));
                 }
             }
+            TempData["error"] = "Error encountered";
             return View(model);
         }
 
@@ -121,8 +125,10 @@ namespace VillaProject_WEB.Controllers
 
             if (response != null && response.IsSuccess)
             {
+                TempData["success"] = "Number deleted successfully";
                 return RedirectToAction(nameof(IndexVillaNumber));
             }
+            TempData["error"] = "Error encountered";
             return View(model);
         }
 

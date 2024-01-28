@@ -49,9 +49,9 @@ namespace VillaProject_WEB.Controllers
 			return View(model);
 		}
 
-		public async Task<IActionResult> UpdateVilla(int VillaId)
+		public async Task<IActionResult> UpdateVilla(int villaId)
 		{
-			var response = await _villaService.GetAsync<APIResponse>(VillaId);
+			var response = await _villaService.GetAsync<APIResponse>(villaId);
 
 			if (response != null && response.IsSuccess)
 			{
@@ -78,9 +78,9 @@ namespace VillaProject_WEB.Controllers
 			return View(model);
 		}
 
-		public async Task<IActionResult> DeleteVilla(int VillaId)
+		public async Task<IActionResult> DeleteVilla(int villaId)
 		{
-			var response = await _villaService.GetAsync<APIResponse>(VillaId);
+			var response = await _villaService.GetAsync<APIResponse>(villaId);
 
 			if (response != null && response.IsSuccess)
 			{

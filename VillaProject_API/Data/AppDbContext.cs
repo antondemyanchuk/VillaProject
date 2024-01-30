@@ -8,6 +8,7 @@ namespace VillaProject_API.Data
 
 		public DbSet<Villa> Villas { get; set; }
 		public DbSet<VillaNumber> VillaNumbers { get; set; }
+		public DbSet<LocalUser> LocalUsers {  get; set; } 
 		public AppDbContext(DbContextOptions<AppDbContext> options): base(options) { }
 		protected override void OnModelCreating(ModelBuilder modelBuilder)
 		{

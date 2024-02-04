@@ -5,7 +5,7 @@ namespace VillaProject_API.Repository.IRepository
 {
 	public interface IUserRepository
 	{
-		bool IsUniqueUser(string username);
+		Task<bool> IsUniqueUser(string username);
 		Task<LoginResponseDTO> Login(LoginRequestDTO loginRequest);
 		Task<LocalUser> Register(RegistrationRequestDTO registrationRequestDTO);
 	}

@@ -1,4 +1,5 @@
-﻿using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -13,15 +14,15 @@ namespace VillaProject_API.Repository
 	{
 		private readonly AppDbContext _context;
 		private string _secretKey;
-		public UserRepository(AppDbContext context, IConfiguration configuration) 
+		public UserRepository(AppDbContext context, IConfiguration configuration)
 		{
 			_context = context;
 			_secretKey = configuration.GetValue<string>("ApiSettings:Secret");
 		}
 
-		public bool IsUniqueUser(string username)
+		public async Task<bool> IsUniqueUser(string username)
 		{
-			var user = _context.LocalUsers.FirstOrDefault(u => u.UserName == username);
+			var user = await _context.LocalUsers.FirstOrDefaultAsync(u => u.UserName == username);
 			if (user == null)
 			{
 				return true;
@@ -34,7 +35,11 @@ namespace VillaProject_API.Repository
 			var user = _context.LocalUsers.FirstOrDefault(u => u.UserName.ToLower() == loginRequest.UserName.ToLower() && u.Password == loginRequest.Password);
 			if (user == null)
 			{
-				return null;
+				return new LoginResponseDTO()
+				{
+					Token = "",
+					User = null
+				};
 			}
 
 			var tokenHandler = new JwtSecurityTokenHandler();
@@ -52,7 +57,7 @@ namespace VillaProject_API.Repository
 			};
 
 			var token = tokenHandler.CreateToken(tokenDescriptor);
-			LoginResponseDTO loginResponseDTO = new() 
+			LoginResponseDTO loginResponseDTO = new()
 			{
 				Token = tokenHandler.WriteToken(token),
 				User = user

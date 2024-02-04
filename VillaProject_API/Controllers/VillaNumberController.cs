@@ -57,7 +57,7 @@ namespace VillaProject_API.Controllers
             {
                 if (villaNo == 0)
                 {
-                    _logger.LogError("Get Villa Error with Id" + villaNo);
+                    _logger.LogError("Get Villa Error with Id " + villaNo);
                     _response.StatusCode = HttpStatusCode.BadRequest;
                     _response.IsSuccess = false;
                     return BadRequest(_response);

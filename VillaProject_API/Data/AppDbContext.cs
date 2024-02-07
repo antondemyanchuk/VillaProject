@@ -73,6 +73,15 @@ namespace VillaProject_API.Data
 					Amenity = "",
 					CreateDate = DateTime.Now
 				});
+			modelBuilder.Entity<LocalUser>().HasData(
+				new LocalUser
+				{
+					Id = 1,
+					UserName = "testUser",
+					Name = "JustUser",
+					Password = "12345",
+					Role = "admin"
+				});
 		}
 
 	}

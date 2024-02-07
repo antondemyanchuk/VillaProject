@@ -3,6 +3,7 @@ using System.Text;
 using VillaProject_WEB.Models;
 using VillaProject_WEB.Services.IServices;
 using VillaProject_Utility;
+using System.Net.Http.Headers;
 
 namespace VillaProject_WEB.Services
 {
@@ -43,6 +44,11 @@ namespace VillaProject_WEB.Services
 						message.Method = HttpMethod.Get;
 						break;
 				}
+				if (!string.IsNullOrEmpty(apiRequest.Token))
+				{
+					client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", apiRequest.Token);
+				}
+
 				HttpResponseMessage apiResponse = null;
 				apiResponse = await client.SendAsync(message);
 

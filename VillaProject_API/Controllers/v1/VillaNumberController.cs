@@ -1,14 +1,17 @@
-﻿using AutoMapper;
+﻿using Asp.Versioning;
+using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using VillaProject_API.Models;
 using VillaProject_API.Models.DTO;
 using VillaProject_API.Repository.IRepository;
 
-namespace VillaProject_API.Controllers
+namespace VillaProject_API.Controllers.v1
 {
-    [Route("api/VillaNumber")]
+    [Route("api/v{version:apiVersion}/VillaNumber")]
     [ApiController]
+    [ApiVersion("1.0")]
     public class VillaNumberController : ControllerBase
     {
         protected APIResponse _response;
@@ -23,7 +26,7 @@ namespace VillaProject_API.Controllers
             _logger = logger;
             _villaRepository = villaRepository;
             _numberRepository = numberRepository;
-            this._response = new();
+            _response = new();
         }
 
         [HttpGet(Name = "GetAllNumbers")]
@@ -86,6 +89,7 @@ namespace VillaProject_API.Controllers
         }
 
         [HttpPost]
+        [Authorize(Roles = "admin")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -135,7 +139,7 @@ namespace VillaProject_API.Controllers
             }
             return _response;
         }
-
+        [Authorize(Roles = "admin")]
         [HttpDelete("{villaNo:int}", Name = "DeleteNumber")]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -174,6 +178,7 @@ namespace VillaProject_API.Controllers
             return _response;
         }
 
+        [Authorize(Roles = "admin")]
         [HttpPut("{villaNo:int}", Name = "UpdateNumber")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Asp.Versioning;
+using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using VillaProject_API.Models;
 using VillaProject_API.Models.DTO;
@@ -8,6 +9,7 @@ namespace VillaProject_API.Controllers
 {
 	[Route("api/UserAuth")]
 	[ApiController]
+	[ApiVersionNeutral]
 	public class UserController : Controller
 	{
 		private readonly IUserRepository _userRepository;

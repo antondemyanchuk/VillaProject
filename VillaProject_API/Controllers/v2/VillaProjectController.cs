@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using Asp.Versioning;
+using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
@@ -9,8 +10,9 @@ using VillaProject_API.Repository.IRepository;
 
 namespace VillaProject_API.Controllers
 {
-	[Route("api/VillaProject")]
+	[Route("api/v{version:apiVersion}/VillaProject")]
 	[ApiController]
+	[ApiVersion("2.0"),]
 	public class VillaProjectController : ControllerBase
 	{
 		protected APIResponse _response;
@@ -26,7 +28,6 @@ namespace VillaProject_API.Controllers
 		}
 
 		[HttpGet]
-		[Authorize]
 		[ProducesResponseType(StatusCodes.Status200OK)]
 		[ProducesResponseType(StatusCodes.Status403Forbidden)]
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]

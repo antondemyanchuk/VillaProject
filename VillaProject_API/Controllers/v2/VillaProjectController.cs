@@ -8,7 +8,7 @@ using VillaProject_API.Models;
 using VillaProject_API.Models.DTO;
 using VillaProject_API.Repository.IRepository;
 
-namespace VillaProject_API.Controllers
+namespace VillaProject_API.Controllers.v2
 {
 	[Route("api/v{version:apiVersion}/VillaProject")]
 	[ApiController]
@@ -28,6 +28,11 @@ namespace VillaProject_API.Controllers
 		}
 
 		[HttpGet]
+		[ResponseCache(CacheProfileName = "Default30")]
+		//Response cash config directly in controller
+		//[ResponseCache(Duration = 30)]
+		//for every time request to DB
+		//[ResponseCache(Location = ResponseCacheLocation.None,NoStore = true)]
 		[ProducesResponseType(StatusCodes.Status200OK)]
 		[ProducesResponseType(StatusCodes.Status403Forbidden)]
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]

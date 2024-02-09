@@ -1,7 +1,7 @@
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -25,6 +25,9 @@ builder.Services.AddDbContext<AppDbContext>(option =>
 {
 	option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultSQLConnection"));
 });
+
+builder.Services.AddResponseCaching();
+
 builder.Services.AddScoped<IVillaRepository, VillaRepository>();
 builder.Services.AddScoped<IVillaNumberRepository, VillaNumberRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -33,37 +36,52 @@ builder.Services.AddAutoMapper(typeof(MappingConfig));
 
 builder.Services.AddApiVersioning(options =>
 {
+	// to make requests without explicitly specifying the API version
 	options.AssumeDefaultVersionWhenUnspecified = true;
 	options.DefaultApiVersion = new ApiVersion(1, 0);
+	options.ReportApiVersions = true;
 })
 .AddApiExplorer(options =>
 {
+	//defines the format for the group name when exploring API versions
 	options.GroupNameFormat = "'v'VVV";
+	//substitute API version parameters in the route template with the corresponding API version value
 	options.SubstituteApiVersionInUrl = true;
 });
 
 var key = builder.Configuration.GetValue<string>("ApiSettings:Secret");
-builder.Services.AddAuthentication(a =>
+builder.Services.AddAuthentication(options =>
 {
-	a.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-	a.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-}).AddJwtBearer(b =>
+	options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+	options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options =>
 {
-	b.RequireHttpsMetadata = false;
-	b.SaveToken = true;
-	b.TokenValidationParameters = new()
+	//HTTPS metadata validation
+	options.RequireHttpsMetadata = true;
+	options.SaveToken = true;
+	options.TokenValidationParameters = new()
 	{
 		ValidateIssuerSigningKey = true,
 		IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(key)),
+		//Disables issuer validation
 		ValidateIssuer = false,
+		//Disables audience validation
 		ValidateAudience = false
 	};
 });
 
 
 builder.Services.AddControllers(
-	//For declining non supported format requests 
-	option => {/* option.ReturnHttpNotAcceptable = true;*/ })
+	 
+	options => 
+	{
+		//For declining non supported format requests
+		/* option.ReturnHttpNotAcceptable = true;*/
+		options.CacheProfiles.Add("Default30", new CacheProfile
+		{
+			Duration = 30
+		});
+	})
 	//For API Patch
 	.AddNewtonsoftJson()
 	//for xml format requests 
@@ -97,6 +115,41 @@ builder.Services.AddSwaggerGen(options =>
 			new List<string>()
 		}
 	});
+	//SWAGER documentation
+	options.SwaggerDoc("v1", new OpenApiInfo
+	{
+		Version = "v1.0",
+		Title = "Villa Project API",
+		Description = "API for Villa managing",
+		TermsOfService = new Uri("https://example.com/terms"),
+		Contact = new OpenApiContact
+		{
+			Name = "Example",
+			Url = new Uri("https://example.com/")
+		},
+		License = new OpenApiLicense
+		{
+			Name = "Example License",
+			Url = new Uri("https://example.com/licence")
+		}
+	});
+	options.SwaggerDoc("v2", new OpenApiInfo
+	{
+		Version = "v2.0",
+		Title = "Villa Project API",
+		Description = "API for Villa managing",
+		TermsOfService = new Uri("https://example.com/terms"),
+		Contact = new OpenApiContact
+		{
+			Name = "Example",
+			Url = new Uri("https://example.com/")
+		},
+		License = new OpenApiLicense
+		{
+			Name = "Example License",
+			Url = new Uri("https://example.com/licence")
+		}
+	});
 });
 
 var app = builder.Build();
@@ -105,7 +158,11 @@ var app = builder.Build();
 if (app.Environment.IsDevelopment())
 {
 	app.UseSwagger();
-	app.UseSwaggerUI();
+	app.UseSwaggerUI(option =>
+	{
+		option.SwaggerEndpoint("/swagger/v1/swagger.json","VillaProjectV1");
+		option.SwaggerEndpoint("/swagger/v2/swagger.json", "VillaProjectV2");
+	});
 }
 
 app.UseHttpsRedirection();

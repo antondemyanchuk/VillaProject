@@ -1,8 +1,8 @@
 using VillaProject_WEB;
 using VillaProject_WEB.Services;
 using VillaProject_WEB.Services.IServices;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Asp.Versioning;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +38,7 @@ builder.Services.AddSession(options =>
 });
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddApiVersioning();
 
 var app = builder.Build();
 

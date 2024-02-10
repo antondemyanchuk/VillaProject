@@ -36,11 +36,27 @@ namespace VillaProject_API.Controllers.v2
 		[ProducesResponseType(StatusCodes.Status200OK)]
 		[ProducesResponseType(StatusCodes.Status403Forbidden)]
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
-		public async Task<ActionResult<APIResponse>> GetVillas()
+		public async Task<ActionResult<APIResponse>> GetVillas([FromQuery(Name = "filterOccupancy")] int? occupancy, 
+			[FromQuery(Name = "search")] string? search, int recordsPerPage = 2, int pageNumber = 1)
 		{
 			try
 			{
-				IEnumerable<Villa> villaList = await _dbVilla.GetAllAsync();
+				IEnumerable<Villa> villaList;
+				// filter using db engine
+				if (occupancy != null && occupancy > 0)
+				{
+					villaList = await _dbVilla.GetAllAsync(v => v.Occupancy == occupancy,recordsPerPage:recordsPerPage,pageNumber:pageNumber);
+				}
+				else
+				{
+					villaList = await _dbVilla.GetAllAsync(recordsPerPage: recordsPerPage, pageNumber: pageNumber);
+				}
+				//filter inside API
+				if (!string.IsNullOrEmpty(search))
+				{
+					villaList = villaList.Where(v => v.Name.ToLower().Contains(search.ToLower()));
+				}
+
 				_response.Result = _mapper.Map<IEnumerable<VillaDTO>>(villaList);
 				_response.StatusCode = HttpStatusCode.OK;
 				_logger.LogInformation("Getting all villas");
@@ -76,10 +92,10 @@ namespace VillaProject_API.Controllers.v2
 				}
 				var villa = await _dbVilla.GetAsync(v => v.Id == id);
 
-				if (villa == null) 
+				if (villa == null)
 				{
-					_response.StatusCode = HttpStatusCode.NotFound ;
-					return NotFound(_response); 
+					_response.StatusCode = HttpStatusCode.NotFound;
+					return NotFound(_response);
 				}
 
 				_response.Result = _mapper.Map<VillaDTO>(villa);

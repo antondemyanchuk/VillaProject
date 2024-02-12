@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using System.Text.Json;
 using VillaProject_API.Models;
 using VillaProject_API.Models.DTO;
 using VillaProject_API.Repository.IRepository;
@@ -37,7 +38,7 @@ namespace VillaProject_API.Controllers.v2
 		[ProducesResponseType(StatusCodes.Status403Forbidden)]
 		[ProducesResponseType(StatusCodes.Status401Unauthorized)]
 		public async Task<ActionResult<APIResponse>> GetVillas([FromQuery(Name = "filterOccupancy")] int? occupancy, 
-			[FromQuery(Name = "search")] string? search, int recordsPerPage = 2, int pageNumber = 1)
+			[FromQuery(Name = "search")] string? search, int recordsPerPage = 10, int pageNumber = 1)
 		{
 			try
 			{
@@ -57,6 +58,13 @@ namespace VillaProject_API.Controllers.v2
 					villaList = villaList.Where(v => v.Name.ToLower().Contains(search.ToLower()));
 				}
 
+				Pagination pagination = new()
+				{
+					RecordsPerPage = recordsPerPage,
+					PageNumber = pageNumber,
+				};
+				Response.Headers.Add("X-Pagination", JsonSerializer.Serialize(pagination));
+
 				_response.Result = _mapper.Map<IEnumerable<VillaDTO>>(villaList);
 				_response.StatusCode = HttpStatusCode.OK;
 				_logger.LogInformation("Getting all villas");
@@ -71,7 +79,7 @@ namespace VillaProject_API.Controllers.v2
 		}
 
 		[HttpGet("{id:int}", Name = "GetVilla")]
-		[Authorize(Roles = "admin")]
+		//[Authorize(Roles = "admin")]
 		[ProducesResponseType(StatusCodes.Status200OK)]
 		[ProducesResponseType(StatusCodes.Status400BadRequest)]
 		[ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -88,6 +96,7 @@ namespace VillaProject_API.Controllers.v2
 					_logger.LogError("Get Villa Error with Id" + id);
 					_response.StatusCode = HttpStatusCode.BadRequest;
 					_response.IsSuccess = false;
+					_response.ErrorMessages = ["Get Villa Error with Id" + id];
 					return BadRequest(_response);
 				}
 				var villa = await _dbVilla.GetAsync(v => v.Id == id);
@@ -95,6 +104,7 @@ namespace VillaProject_API.Controllers.v2
 				if (villa == null)
 				{
 					_response.StatusCode = HttpStatusCode.NotFound;
+					_response.IsSuccess = false;
 					return NotFound(_response);
 				}
 
@@ -131,8 +141,8 @@ namespace VillaProject_API.Controllers.v2
 				//Checking and validation data
 				if (await _dbVilla.GetAsync(v => v.Name.ToLower() == createVillaDTO.Name.ToLower()) != null)
 				{
-					ModelState.AddModelError("ErrorMessages", "Villa already exist!");
 					_response.IsSuccess = false;
+					_response.ErrorMessages = ["Villa already exist!"];
 					_logger.LogInformation("Villa already exists with the specified number");
 					return BadRequest(ModelState);
 				}
@@ -188,6 +198,7 @@ namespace VillaProject_API.Controllers.v2
 				{
 					_response.StatusCode = HttpStatusCode.BadRequest;
 					_response.IsSuccess = false;
+					_response.ErrorMessages = ["Not Valid input data"];
 					_logger.LogInformation("Not Valid input data");
 					return BadRequest(_response);
 				}
@@ -196,6 +207,7 @@ namespace VillaProject_API.Controllers.v2
 				{
 					_response.StatusCode = HttpStatusCode.NotFound;
 					_response.IsSuccess = false;
+					_response.ErrorMessages = ["The Villa does not found"];
 					_logger.LogInformation("The Villa does not found");
 					return NotFound(_response);
 				}

@@ -76,6 +76,7 @@ namespace VillaProject_API.Controllers.v1
 				if (villa == null)
 				{
 					_response.StatusCode = HttpStatusCode.NotFound;
+					_response.IsSuccess = false;
 					return NotFound(_response);
 				}
 
@@ -112,10 +113,10 @@ namespace VillaProject_API.Controllers.v1
 				//Checking and validation data
 				if (await _dbVilla.GetAsync(v => v.Name.ToLower() == createVillaDTO.Name.ToLower()) != null)
 				{
-					ModelState.AddModelError("ErrorMessages", "Villa already exist!");
 					_response.IsSuccess = false;
+					_response.ErrorMessages = ["Villa already exist!"];
 					_logger.LogInformation("Villa already exists with the specified number");
-					return BadRequest(ModelState);
+					return BadRequest(_response);
 				}
 
 				if (createVillaDTO == null)

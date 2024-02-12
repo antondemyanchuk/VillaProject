@@ -9,214 +9,216 @@ using VillaProject_API.Repository.IRepository;
 
 namespace VillaProject_API.Controllers.v1
 {
-    [Route("api/v{version:apiVersion}/VillaNumber")]
-    [ApiController]
-    [ApiVersion("1.0")]
-    public class VillaNumberController : ControllerBase
-    {
-        protected APIResponse _response;
-        private readonly ILogger<VillaNumberController> _logger;
-        private readonly IVillaNumberRepository _numberRepository;
-        private readonly IVillaRepository _villaRepository;
-        private readonly IMapper _mapper;
+	[Route("api/v{version:apiVersion}/VillaNumber")]
+	[ApiController]
+	[ApiVersion("1.0")]
+	public class VillaNumberController : ControllerBase
+	{
+		protected APIResponse _response;
+		private readonly ILogger<VillaNumberController> _logger;
+		private readonly IVillaNumberRepository _numberRepository;
+		private readonly IVillaRepository _villaRepository;
+		private readonly IMapper _mapper;
 
-        public VillaNumberController(ILogger<VillaNumberController> logger, IVillaNumberRepository numberRepository, IVillaRepository villaRepository, IMapper mapper)
-        {
-            _mapper = mapper;
-            _logger = logger;
-            _villaRepository = villaRepository;
-            _numberRepository = numberRepository;
-            _response = new();
-        }
+		public VillaNumberController(ILogger<VillaNumberController> logger, IVillaNumberRepository numberRepository, IVillaRepository villaRepository, IMapper mapper)
+		{
+			_mapper = mapper;
+			_logger = logger;
+			_villaRepository = villaRepository;
+			_numberRepository = numberRepository;
+			_response = new();
+		}
 
-        [HttpGet(Name = "GetAllNumbers")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<ActionResult<APIResponse>> GetAllNumbers()
-        {
-            try
-            {
-                IEnumerable<VillaNumber> villaNumbers = await _numberRepository.GetAllAsync(includeProperties: "Villa");
-                _response.Result = _mapper.Map<IEnumerable<VillaNumberDTO>>(villaNumbers);
-                _response.StatusCode = HttpStatusCode.OK;
-                _logger.LogInformation("Getting All Numbers");
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.ErrorMessages = new List<string>() { ex.ToString() };
-                _logger.LogError("Exception Getting All Numbers");
-            }
-            return _response;
-        }
+		[HttpGet(Name = "GetAllNumbers")]
+		[ProducesResponseType(StatusCodes.Status200OK)]
+		public async Task<ActionResult<APIResponse>> GetAllNumbers(int recordsPerPage = 10, int pageNumber = 1)
+		{
+			try
+			{
+				IEnumerable<VillaNumber> villaNumbers = await _numberRepository.GetAllAsync(includeProperties: "Villa", 
+					recordsPerPage:recordsPerPage,pageNumber:pageNumber);
+				_response.Result = _mapper.Map<IEnumerable<VillaNumberDTO>>(villaNumbers);
+				_response.StatusCode = HttpStatusCode.OK;
+				_logger.LogInformation("Getting All Numbers");
+				return Ok(_response);
+			}
+			catch (Exception ex)
+			{
+				_response.IsSuccess = false;
+				_response.ErrorMessages = new List<string>() { ex.ToString() };
+				_logger.LogError("Exception Getting All Numbers");
+			}
+			return _response;
+		}
 
-        [HttpGet("{villaNo:int}", Name = "GetNumber")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult<APIResponse>> GetNumber(int villaNo)
-        {
-            try
-            {
-                if (villaNo == 0)
-                {
-                    _logger.LogError("Get Villa Error with Id " + villaNo);
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    return BadRequest(_response);
-                }
-                var villaNumber = await _numberRepository.GetAsync(n => n.VillaNo == villaNo, includeProperties: "Villa");
+		[HttpGet("{villaNo:int}", Name = "GetNumber")]
+		[ProducesResponseType(StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
+		public async Task<ActionResult<APIResponse>> GetNumber(int villaNo)
+		{
+			try
+			{
+				if (villaNo == 0)
+				{
+					_logger.LogError("Get Villa Error with Id " + villaNo);
+					_response.StatusCode = HttpStatusCode.BadRequest;
+					_response.IsSuccess = false;
+					return BadRequest(_response);
+				}
+				var villaNumber = await _numberRepository.GetAsync(n => n.VillaNo == villaNo, includeProperties: "Villa");
 
-                if (villaNumber == null)
-                {
-                    _response.StatusCode = HttpStatusCode.NotFound;
-                    _logger.LogInformation("Villa with the specified parameters was not found ");
-                    return NotFound(_response);
-                }
+				if (villaNumber == null)
+				{
+					_response.StatusCode = HttpStatusCode.NotFound;
+					_response.IsSuccess = false;
+					_logger.LogInformation("Villa with the specified parameters was not found ");
+					return NotFound(_response);
+				}
 
-                _response.Result = _mapper.Map<VillaNumberDTO>(villaNumber);
-                _response.StatusCode = HttpStatusCode.OK;
-                _logger.LogInformation("Getting Number by No");
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.ErrorMessages = [ex.ToString()];
-                _logger.LogError("Exception Getting Number by No");
-            }
-            return _response;
-        }
+				_response.Result = _mapper.Map<VillaNumberDTO>(villaNumber);
+				_response.StatusCode = HttpStatusCode.OK;
+				_logger.LogInformation("Getting Number by No");
+				return Ok(_response);
+			}
+			catch (Exception ex)
+			{
+				_response.IsSuccess = false;
+				_response.ErrorMessages = [ex.ToString()];
+				_logger.LogError("Exception Getting Number by No");
+			}
+			return _response;
+		}
 
-        [HttpPost]
-        [Authorize(Roles = "admin")]
-        [ProducesResponseType(StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<APIResponse>> CreateNumber([FromBody] VillaNumberCreateDTO createVillaNumberDTO)
-        {
-            try
-            {
-                if (await _numberRepository.GetAsync(v => v.VillaNo == createVillaNumberDTO.VillaNo) != null)
-                {
-                    ModelState.AddModelError("ErrorMessages", "Number already exist!");
-                    _response.IsSuccess = false;
-                    _response.ErrorMessages = ["Number already exist!"];
-                    _logger.LogInformation("Number already exists with the specified number");
-                    return BadRequest(_response);
-                }
-                if (await _villaRepository.GetAsync(v => v.Id == createVillaNumberDTO.VillaId) == null)
-                {
-                    ModelState.AddModelError("ErrorMessages", "Villa with provided Id doesn't exist!");
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.ErrorMessages = ["Villa with provided Id doesn't exist!"];
-                    _logger.LogInformation("Villa with provided Id doesn't exist!");
-                    return BadRequest(_response);
-                }
+		[HttpPost]
+		[Authorize(Roles = "admin")]
+		[ProducesResponseType(StatusCodes.Status201Created)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		[ProducesResponseType(StatusCodes.Status500InternalServerError)]
+		public async Task<ActionResult<APIResponse>> CreateNumber([FromBody] VillaNumberCreateDTO createVillaNumberDTO)
+		{
+			try
+			{
+				if (await _numberRepository.GetAsync(v => v.VillaNo == createVillaNumberDTO.VillaNo) != null)
+				{
+					ModelState.AddModelError("ErrorMessages", "Number already exist!");
+					_response.IsSuccess = false;
+					_response.ErrorMessages = ["Number already exist!"];
+					_logger.LogInformation("Number already exists with the specified number");
+					return BadRequest(_response);
+				}
+				if (await _villaRepository.GetAsync(v => v.Id == createVillaNumberDTO.VillaId) == null)
+				{
+					ModelState.AddModelError("ErrorMessages", "Villa with provided Id doesn't exist!");
+					_response.IsSuccess = false;
+					_response.StatusCode = HttpStatusCode.BadRequest;
+					_response.ErrorMessages = ["Villa with provided Id doesn't exist!"];
+					_logger.LogInformation("Villa with provided Id doesn't exist!");
+					return BadRequest(_response);
+				}
 
 
-                if (createVillaNumberDTO == null)
-                {
-                    return BadRequest(createVillaNumberDTO);
-                }
+				if (createVillaNumberDTO == null)
+				{
+					return BadRequest(createVillaNumberDTO);
+				}
 
-                var villaNumber = _mapper.Map<VillaNumber>(createVillaNumberDTO);
+				var villaNumber = _mapper.Map<VillaNumber>(createVillaNumberDTO);
 
-                await _numberRepository.CreateAsync(villaNumber);
+				await _numberRepository.CreateAsync(villaNumber);
 
-                _response.Result = _mapper.Map<VillaNumberDTO>(villaNumber);
-                _response.StatusCode = HttpStatusCode.Created;
-                _logger.LogInformation("Added new Number");
+				_response.Result = _mapper.Map<VillaNumberDTO>(villaNumber);
+				_response.StatusCode = HttpStatusCode.Created;
+				_logger.LogInformation("Added new Number");
 
-                return CreatedAtRoute("GetNumber", new { villaNo = villaNumber.VillaNo }, _response);
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.ErrorMessages = new List<string>() { ex.ToString() };
-                _logger.LogError("Exception Creating new Number");
-            }
-            return _response;
-        }
-        [Authorize(Roles = "admin")]
-        [HttpDelete("{villaNo:int}", Name = "DeleteNumber")]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<APIResponse>> DeleteNumber(int villaNo)
-        {
-            try
-            {
-                if (villaNo == 0)
-                {
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    _logger.LogInformation("Not Valid input data");
-                    return BadRequest(_response);
-                }
-                var villaNumber = await _numberRepository.GetAsync(v => v.VillaNo == villaNo);
-                if (villaNumber == null)
-                {
-                    _response.StatusCode = HttpStatusCode.NotFound;
-                    _response.IsSuccess = false;
-                    _logger.LogInformation("The Number does not found");
-                    return NotFound(_response);
-                }
-                await _numberRepository.RemoveAsync(villaNumber);
+				return CreatedAtRoute("GetNumber", new { villaNo = villaNumber.VillaNo }, _response);
+			}
+			catch (Exception ex)
+			{
+				_response.IsSuccess = false;
+				_response.ErrorMessages = new List<string>() { ex.ToString() };
+				_logger.LogError("Exception Creating new Number");
+			}
+			return _response;
+		}
+		[Authorize(Roles = "admin")]
+		[HttpDelete("{villaNo:int}", Name = "DeleteNumber")]
+		[ProducesResponseType(StatusCodes.Status404NotFound)]
+		[ProducesResponseType(StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		public async Task<ActionResult<APIResponse>> DeleteNumber(int villaNo)
+		{
+			try
+			{
+				if (villaNo == 0)
+				{
+					_response.StatusCode = HttpStatusCode.BadRequest;
+					_response.IsSuccess = false;
+					_logger.LogInformation("Not Valid input data");
+					return BadRequest(_response);
+				}
+				var villaNumber = await _numberRepository.GetAsync(v => v.VillaNo == villaNo);
+				if (villaNumber == null)
+				{
+					_response.StatusCode = HttpStatusCode.NotFound;
+					_response.IsSuccess = false;
+					_logger.LogInformation("The Number does not found");
+					return NotFound(_response);
+				}
+				await _numberRepository.RemoveAsync(villaNumber);
 
-                _response.StatusCode = HttpStatusCode.OK;
-                _response.IsSuccess = true;
-                _logger.LogInformation("Number deleted");
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.ErrorMessages = new List<string>() { ex.ToString() };
-            }
-            return _response;
-        }
+				_response.StatusCode = HttpStatusCode.OK;
+				_response.IsSuccess = true;
+				_logger.LogInformation("Number deleted");
+				return Ok(_response);
+			}
+			catch (Exception ex)
+			{
+				_response.IsSuccess = false;
+				_response.ErrorMessages = new List<string>() { ex.ToString() };
+			}
+			return _response;
+		}
 
-        [Authorize(Roles = "admin")]
-        [HttpPut("{villaNo:int}", Name = "UpdateNumber")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<APIResponse>> UpdateNumber(int villaNo, [FromBody] VillaNumberUpdateDTO updateVillaNumberDTO)
-        {
-            try
-            {
-                if (updateVillaNumberDTO == null || villaNo != updateVillaNumberDTO.VillaNo)
-                {
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _response.IsSuccess = false;
-                    _logger.LogInformation("Not Valid input data");
-                    return BadRequest(_response);
-                }
-                if (await _villaRepository.GetAsync(v => v.Id == updateVillaNumberDTO.VillaId) == null)
-                {
-                    ModelState.AddModelError("ErrorMessages", "Villa with provided Id doesn't exist!");
-                    _response.IsSuccess = false;
-                    _response.StatusCode = HttpStatusCode.BadRequest;
-                    _logger.LogInformation("Villa with provided Id doesn't exist!");
-                    return BadRequest(_response);
-                }
+		[Authorize(Roles = "admin")]
+		[HttpPut("{villaNo:int}", Name = "UpdateNumber")]
+		[ProducesResponseType(StatusCodes.Status200OK)]
+		[ProducesResponseType(StatusCodes.Status400BadRequest)]
+		public async Task<ActionResult<APIResponse>> UpdateNumber(int villaNo, [FromBody] VillaNumberUpdateDTO updateVillaNumberDTO)
+		{
+			try
+			{
+				if (updateVillaNumberDTO == null || villaNo != updateVillaNumberDTO.VillaNo)
+				{
+					_response.StatusCode = HttpStatusCode.BadRequest;
+					_response.IsSuccess = false;
+					_logger.LogInformation("Not Valid input data");
+					return BadRequest(_response);
+				}
+				if (await _villaRepository.GetAsync(v => v.Id == updateVillaNumberDTO.VillaId) == null)
+				{
+					ModelState.AddModelError("ErrorMessages", "Villa with provided Id doesn't exist!");
+					_response.IsSuccess = false;
+					_response.StatusCode = HttpStatusCode.BadRequest;
+					_logger.LogInformation("Villa with provided Id doesn't exist!");
+					return BadRequest(_response);
+				}
 
-                var model = _mapper.Map<VillaNumber>(updateVillaNumberDTO);
+				var model = _mapper.Map<VillaNumber>(updateVillaNumberDTO);
 
-                await _numberRepository.UpdateAsync(model);
-                _response.StatusCode = HttpStatusCode.OK;
-                _response.Result = model;
-                _logger.LogInformation("Number updated");
-                return Ok(_response);
-            }
-            catch (Exception ex)
-            {
-                _response.IsSuccess = false;
-                _response.ErrorMessages = new List<string>() { ex.ToString() };
-            }
-            return _response;
-        }
-    }
+				await _numberRepository.UpdateAsync(model);
+				_response.StatusCode = HttpStatusCode.OK;
+				_response.Result = model;
+				_logger.LogInformation("Number updated");
+				return Ok(_response);
+			}
+			catch (Exception ex)
+			{
+				_response.IsSuccess = false;
+				_response.ErrorMessages = new List<string>() { ex.ToString() };
+			}
+			return _response;
+		}
+	}
 }
 

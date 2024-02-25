@@ -1,4 +1,5 @@
-﻿using VillaProject_WEB.Models;
+﻿using System.Text;
+using VillaProject_WEB.Models;
 using VillaProject_WEB.Models.DTO;
 using VillaProject_WEB.Services.IServices;
 using static VillaProject_Utility.SD;
@@ -36,12 +37,29 @@ namespace VillaProject_WEB.Services
 			});
 		}
 
-		public Task<T> GetAllAsync<T>(string token)
+		public Task<T> GetAllAsync<T>(string token, string? search = null, int? filterOccupancy = null, int? recordsPerPage = null, int? pageNumber = null)
 		{
+			var urlBuilder = new StringBuilder($"{_url}/api/v2/VillaProject");
+			if (!string.IsNullOrEmpty(search))
+			{
+				urlBuilder.Append($"search={search}&");
+			}
+			if (filterOccupancy.HasValue)
+			{
+				urlBuilder.Append($"filterOccupancy={filterOccupancy}&");
+			}
+			if (recordsPerPage.HasValue)
+			{
+				urlBuilder.Append($"recordsPerPage={recordsPerPage}&");
+			}
+			if (pageNumber.HasValue)
+			{
+				urlBuilder.Append($"pageNumber={pageNumber}&");
+			}
 			return SendAsync<T>(new APIRequest()
 			{
 				ApiType = ApiType.GET,
-				Url = $"{_url}/api/v2/VillaProject",
+				Url = urlBuilder.ToString(),
 				Token = token
 			});
 		}
